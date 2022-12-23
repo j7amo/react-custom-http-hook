@@ -1,45 +1,39 @@
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import * as PropTypes from 'prop-types';
 
 import Section from '../UI/Section';
 import TaskForm from './TaskForm';
+import useFetch from '../../hooks/use-fetch';
 
 function NewTask(props) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { onAddTask } = props;
+  const [isLoading, error, sendRequest] = useFetch();
 
-  const enterTaskHandler = async (taskText) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        'https://react-movies-b2487-default-rtdb.europe-west1.firebasedatabase.app/tasks.json',
-        {
-          method: 'POST',
-          body: JSON.stringify({ text: taskText }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error('Request failed!');
-      }
-
-      const data = await response.json();
-
+  const applyData = useCallback(
+    (taskText) => (data) => {
       const generatedId = data.name; // firebase-specific => "name" contains generated id
       const createdTask = { id: generatedId, text: taskText };
 
-      const { onAddTask } = props;
-
       onAddTask(createdTask);
-    } catch (err) {
-      setError(err.message || 'Something went wrong!');
-    }
-    setIsLoading(false);
-  };
+    },
+    [onAddTask],
+  );
+
+  const enterTaskHandler = useCallback(
+    (taskText) => {
+      const requestConfig = {
+        url: 'https://react-movies-b2487-default-rtdb.europe-west1.firebasedatabase.app/tasks.json',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: taskText }),
+      };
+
+      sendRequest(requestConfig, applyData(taskText));
+    },
+    [applyData, sendRequest],
+  );
 
   return (
     <Section>

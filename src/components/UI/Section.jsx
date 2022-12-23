@@ -8,8 +8,16 @@ function Section(props) {
   return <section className={classes.section}>{children}</section>;
 }
 
+Section.defaultProps = {
+  children: '',
+};
+
 Section.propTypes = {
-  children: PropTypes.func.isRequired,
+  children: PropTypes.oneOf([
+    PropTypes.func,
+    PropTypes.array,
+    PropTypes.object,
+  ]),
 };
 
 export default Section;

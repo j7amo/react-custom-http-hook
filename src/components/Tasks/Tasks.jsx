@@ -42,6 +42,10 @@ function Tasks(props) {
   );
 }
 
+Tasks.defaultProps = {
+  error: null,
+};
+
 Tasks.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.shape({
@@ -49,7 +53,7 @@ Tasks.propTypes = {
       text: PropTypes.string.isRequired,
     }),
   ).isRequired,
-  error: PropTypes.oneOf([PropTypes.object, PropTypes.string]).isRequired,
+  error: PropTypes.string,
   onFetch: PropTypes.func.isRequired,
   loading: PropTypes.bool.isRequired,
 };

@@ -1,45 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import Tasks from './components/Tasks/Tasks';
 import NewTask from './components/NewTask/NewTask';
+import useFetch from './hooks/use-fetch';
+
+// we move this outside the component to avoid re-creation between component re-renders
+const requestConfig = {
+  url: 'https://react-movies-b2487-default-rtdb.europe-west1.firebasedatabase.app/tasks.json',
+};
 
 function App() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [isLoading, error, fetchTasks] = useFetch();
 
-  const fetchTasks = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        'https://react-movies-b2487-default-rtdb.europe-west1.firebasedatabase.app/tasks.json',
-      );
+  const applyData = useCallback((data) => {
+    const loadedTasks = [];
+    Object.values(data).forEach(({ text }) => loadedTasks.push({ text }));
 
-      if (!response.ok) {
-        throw new Error('Request failed!');
-      }
-
-      const data = await response.json();
-
-      const loadedTasks = [];
-
-      Object.entries(data).forEach(([id, text]) => loadedTasks.push({ id, text }));
-
-      setTasks(loadedTasks);
-    } catch (err) {
-      setError(err.message || 'Something went wrong!');
-    }
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    fetchTasks();
+    setTasks(loadedTasks);
   }, []);
 
-  const taskAddHandler = (task) => {
+  useEffect(() => {
+    fetchTasks(requestConfig, applyData);
+  }, [fetchTasks]);
+
+  const taskAddHandler = useCallback((task) => {
     setTasks((prevTasks) => prevTasks.concat(task));
-  };
+  }, []);
+
+  const fetchTasksHandler = useCallback(() => {
+    fetchTasks(requestConfig, applyData);
+  }, [fetchTasks]);
 
   return (
     <>
@@ -48,7 +39,7 @@ function App() {
         items={tasks}
         loading={isLoading}
         error={error}
-        onFetch={fetchTasks}
+        onFetch={fetchTasksHandler}
       />
     </>
   );
